@@ -1,4 +1,4 @@
-namespace EClinicalWorksPoc;
+namespace EClinicalWorksPoc.Configuration;
 
 public static class EClinicalWorksConstants
 {

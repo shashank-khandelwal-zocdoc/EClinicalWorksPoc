@@ -1,18 +1,12 @@
 using Serilog;
 using ILogger = Serilog.ILogger;
 
-namespace EClinicalWorksPoc;
+namespace EClinicalWorksPoc.Logging;
 
-public class CustomLogger : ICustomLogger
+public class CustomLogger(ILogger fileLogger, ILogger consoleLogger) : ICustomLogger
 {
-    private readonly ILogger _fileLogger;
-    private readonly ILogger _consoleLogger;
-
-    public CustomLogger(ILogger fileLogger, ILogger consoleLogger)
-    {
-        _fileLogger = fileLogger;
-        _consoleLogger = consoleLogger;
-    }
+    private readonly ILogger _fileLogger = fileLogger;
+    private readonly ILogger _consoleLogger = consoleLogger;
 
     // Information methods
     public void Information(string messageTemplate, bool logToConsole = true)

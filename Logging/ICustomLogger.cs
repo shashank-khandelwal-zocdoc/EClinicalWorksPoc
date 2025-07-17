@@ -1,4 +1,4 @@
-namespace EClinicalWorksPoc;
+namespace EClinicalWorksPoc.Logging;
 
 public interface ICustomLogger
 {

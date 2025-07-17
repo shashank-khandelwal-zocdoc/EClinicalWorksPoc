@@ -1,6 +1,8 @@
-using Microsoft.Extensions.Configuration;
+using EClinicalWorksPoc.Authentication;
+using EClinicalWorksPoc.Configuration;
+using EClinicalWorksPoc.Logging;
 
-namespace EClinicalWorksPoc;
+namespace EClinicalWorksPoc.Core;
 
 public class EClinicalWorksApplication(EClinicalWorksSettings settings, ICustomLogger logger, EClinicalWorksAuthenticator authenticator)
 {

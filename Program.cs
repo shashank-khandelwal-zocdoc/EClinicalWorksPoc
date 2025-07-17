@@ -1,12 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using EClinicalWorksPoc;
 
-// Build configuration from appsettings.json and environment-specific files
-var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+// Build configuration from appsettings.json
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables()
     .Build();
 

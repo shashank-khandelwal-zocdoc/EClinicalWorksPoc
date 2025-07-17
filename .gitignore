@@ -352,6 +352,5 @@ FodyWeavers.xsd
 .env.production
 .env.development
 
-# Sensitive configuration files (uncomment if you want to exclude them)
-# appsettings.Production.json
-# appsettings.Development.json
+# Sensitive configuration files
+appsettings.json

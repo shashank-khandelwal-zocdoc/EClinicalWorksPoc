@@ -4,24 +4,31 @@ A proof-of-concept application for EClinicalWorks API integration with .NET 8.
 
 ## Features
 
-- Configuration system with environment-specific settings
-- Support for Development and Production environments
+- Simple configuration system with a single settings file
 - EClinicalWorks cloud URL integration
-- Secure credential management
+- Secure credential management (credentials not committed to git)
+
+## Setup
+
+1. Copy the example configuration file:
+   ```bash
+   cp appsettings.example.json appsettings.json
+   ```
+
+2. Edit `appsettings.json` and update the credentials:
+   ```json
+   {
+     "EClinicalWorks": {
+       "BaseUrl": "client-base-url",
+       "Username": "client-actual-username",
+       "Password": "client-actual-password"
+     }
+   }
+   ```
 
 ## Configuration
 
-The application uses appsettings.json files for configuration:
-
-- `appsettings.json` - Default settings
-- `appsettings.Development.json` - Development environment
-- `appsettings.Production.json` - Production environment with ECW cloud URL
-
-## Environment
-
-Set `DOTNET_ENVIRONMENT` to control which configuration is loaded:
-- Development (default)
-- Production
+The application uses a single `appsettings.json` file for configuration. This file contains sensitive credentials and is excluded from git commits for security.
 
 ## Usage
 
@@ -32,8 +39,6 @@ dotnet run
 
 ## EClinicalWorks Integration
 
-The application is configured to connect to:
-- Production: https://txahjm10202023rgagjc7app.ecwcloud.com/
-- Development: https://dev-api.eclinicalworks.com
+The application is configured to connect to: https://txahjm10202023rgagjc7app.ecwcloud.com/
 
-Update the username and password in the respective appsettings files.
+**Important**: Never commit your actual `appsettings.json` file with real credentials. Use `appsettings.example.json` as a template.

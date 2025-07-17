@@ -1,23 +1,79 @@
 using Microsoft.Extensions.Configuration;
 using EClinicalWorksPoc;
+using Serilog;
+using System.Diagnostics.CodeAnalysis;
 
-// Build configuration from appsettings.json
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddEnvironmentVariables()
-    .Build();
+// Configure Serilog logger
+var executablePath = AppContext.BaseDirectory;
+var logsPath = Path.Combine(executablePath, "logs");
 
-// Bind the EClinicalWorks section to our settings class
-var eclinicalWorksSettings = new EClinicalWorksSettings();
-configuration.GetSection(EClinicalWorksSettings.SectionName).Bind(eclinicalWorksSettings);
+// Ensure logs directory exists
+Directory.CreateDirectory(logsPath);
 
-// Display the loaded settings
-Console.WriteLine("EClinicalWorks Configuration:");
-Console.WriteLine($"Base URL: {eclinicalWorksSettings.BaseUrl}");
-Console.WriteLine($"Username: {eclinicalWorksSettings.Username}");
-Console.WriteLine($"Password: {new string('*', eclinicalWorksSettings.Password.Length)}"); // Mask password for security
+// Create a unique log file name for each run
+var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+var logFileName = $"EClinicalWorksPoc_{timestamp}.log";
+var logFilePath = Path.Combine(logsPath, logFileName);
 
-// Example of how to use the settings in your application
-Console.WriteLine("\nConfiguration loaded successfully!");
-Console.WriteLine("You can now use these settings to configure your EClinicalWorks API client.");
+// Configure separate file and console loggers
+var fileLogger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.File(logFilePath, 
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+        rollingInterval: RollingInterval.Infinite) // Don't roll the file since we create a new one each run
+    .CreateLogger();
+
+var consoleLogger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+// Set the global logger to file logger for compatibility
+Log.Logger = fileLogger;
+
+// Create custom logger that combines both
+var customLogger = new CustomLogger(fileLogger, consoleLogger);
+
+try
+{
+    customLogger.Information("Application starting up...");
+    customLogger.Information("Log file created at: {LogFilePath}", logFilePath);
+
+    // Build configuration from appsettings.json
+    var configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .AddEnvironmentVariables()
+        .Build();
+
+    customLogger.Information("Configuration loaded from appsettings.json");
+
+    // Bind the EClinicalWorks section to our settings class
+    var eclinicalWorksSettings = new EClinicalWorksSettings();
+    #pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access
+    configuration.GetSection(EClinicalWorksSettings.SectionName).Bind(eclinicalWorksSettings);
+    #pragma warning restore IL2026
+
+    customLogger.Information("EClinicalWorks settings bound successfully");
+
+    // Create HttpClient for making HTTP requests
+    using var httpClient = new HttpClient();
+
+    // Create the authenticator
+    var authenticator = new EClinicalWorksAuthenticator(eclinicalWorksSettings, customLogger, httpClient);
+    
+    // Create and run the application
+    var application = new EClinicalWorksApplication(eclinicalWorksSettings, customLogger, authenticator);
+    await application.RunAsync();
+
+    customLogger.Information("Application completed successfully");
+}
+catch (Exception ex)
+{
+    customLogger.Fatal(ex, "Application terminated unexpectedly");
+    Environment.ExitCode = 1;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
